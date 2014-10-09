@@ -83,6 +83,19 @@ static char *exif_date_to_date(char *date)
 	return date;
 }
 
+static void create_html_index(void)
+{
+	FILE *fp = fopen("index.html", "w");
+
+	fprintf(fp, "<html>\n");
+	fprintf(fp, "<head>\n");
+	fprintf(fp, "\t<meta http-equiv=\"refresh\" content=\"0; url=html/page0001.html\">\n");
+	fprintf(fp, "</head>\n");
+	fprintf(fp, "</html>\n");
+
+	fclose(fp);
+}
+
 static void create_preview_html(const char *page, int image_no,
 				const char *description)
 {
@@ -198,6 +211,7 @@ static void create_html(void)
 		fprintf(fp, HTML_END);
 		fclose(fp);
 	}
+	create_html_index();
 }
 
 static void create_preview(const MagickWand *wand, const char *image)
