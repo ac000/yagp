@@ -1,0 +1,16 @@
+		yagp - Yet Another Gallery Program
+
+This is inspired by the gThumb web gallery creator. It has very simple
+requirements, GraphicsMagick & libexif.
+
+Building it is as simple as typing make.
+
+To run it, simply cd into the directory containing the images you wish to
+use for the gallery and run yagp -t "My Album", or whatever title you want.
+
+It will create three directories; html, thumbnails & previews. Copy the theme
+directory from this repository into the html directory so you end up with
+html/theme
+
+This is licensed under the GNU General Public License V2.
+See COPYING.
