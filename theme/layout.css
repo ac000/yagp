@@ -200,6 +200,7 @@ dl.caption-container dd.last {
 #thumbnail-list div.thumbnail-caption-container {
 	float: left;
 	margin: 15px;
+	width: 22%;
 }
 
 #thumbnail-list div.thumbnail-container {
