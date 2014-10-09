@@ -132,7 +132,7 @@ static void create_preview_html(const char *page, int image_no,
 	}
 	img++;
 
-	fprintf(fp, P_IMG, img, img, width, height, description);
+	fprintf(fp, P_IMG, img, img, img, width, height, description);
 	fprintf(fp, P_HTML_END);
 	fclose(fp);
 }

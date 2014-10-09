@@ -60,7 +60,7 @@
       </ul>\n\n"
 
 #define P_IMG		"<div class=\"image-preview\">\n\
-      <img src=\"../previews/%s.medium.jpeg\" alt=\"../previews/%s.medium.jpeg\" width=\"%d\" height=\"%d\" class=\"preview\" /></div>\n\
+      <a href=\"../%s\"><img src=\"../previews/%s.medium.jpeg\" alt=\"../previews/%s.medium.jpeg\" width=\"%d\" height=\"%d\" class=\"preview\" /></a></div>\n\
 \n\
       <div class=\"image-comment\">\n\
         %s</div>\n\
