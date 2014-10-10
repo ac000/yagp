@@ -43,6 +43,7 @@
 #define LANDSCAPE	1
 
 #define IMGS_PER_PAGE	16
+#define IMGS_PER_ROW	 4
 
 #define IMGS_ALLOC_SZ	50
 
@@ -175,7 +176,7 @@ static void create_html(void)
 			fprintf(fp, P_PAGE, ppage);
 		}
 		fprintf(fp, N_LAST);
-		fprintf(fp, "<div id=\"thumbnail-list\">\n");
+		fprintf(fp, THUMB_LST);
 
 		for (j = 0; j < IMGS_PER_PAGE; j++) {
 			int width = THUMB_W;
@@ -187,7 +188,9 @@ static void create_html(void)
 
 			if (image_no == nr_images)
 				break;
-			fprintf(fp, "<div class=\"thumbnail-caption-container\">\n");
+			if (j && j % IMGS_PER_ROW == 0)
+				fprintf(fp, "</tr>\n<tr class=\"tr_index\">\n");
+			fprintf(fp, "<td class=\"td_index\">\n<div class=\"thumbnail-caption-container\">\n");
 			img = images[image_no];
 			if (img[0] == 'P')
 				width = THUMB_W_P;
@@ -207,7 +210,6 @@ static void create_html(void)
 			image_no++;
 			exif_data_unref(ed);
 		}
-
 		fprintf(fp, HTML_END);
 		fclose(fp);
 	}

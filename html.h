@@ -118,6 +118,10 @@
         </li>\n\
       </ul>\n\n"
 
+#define THUMB_LST	"<div id=\"thumbnail-list\">\n\
+	<table id=\"thumbnail-grid\">\n\
+	<tr class=\"tr_index\">\n"
+
 #define THUMB_CT	"<div class=\"thumbnail-container\">\n\
         <div class=\"thumbnail-top\">\n\
         </div>\n\
@@ -145,9 +149,11 @@
 \n\
         </div> <!-- caption-container -->\n\
         </div> <!-- thumbnail-caption-container -->\n\
-\n"
+     </td>\n"
 
-#define HTML_END	"</div>\n\n\
+#define HTML_END	"</tr>\n\
+	</table>\n\
+      </div>\n\n\
     </div>\n\
   </div>\n\
   <div id=\"footer\">\n\
