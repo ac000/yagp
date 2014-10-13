@@ -10,6 +10,12 @@
 #ifndef _HTML_H_
 #define _HTML_H_
 
+#define INDEX_HTML	"<html>\n\
+<head>\n\
+	<meta http-equiv=\"refresh\" content=\"0; url=html/page0001.html\">\n\
+</head>\n\
+</html>\n"
+
 #define P_HTML_HEAD	"<!DOCTYPE html\n\
      PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\"\n\
      \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">\n\

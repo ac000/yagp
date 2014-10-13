@@ -88,12 +88,7 @@ static void create_html_index(void)
 {
 	FILE *fp = fopen("index.html", "w");
 
-	fprintf(fp, "<html>\n");
-	fprintf(fp, "<head>\n");
-	fprintf(fp, "\t<meta http-equiv=\"refresh\" content=\"0; url=html/page0001.html\">\n");
-	fprintf(fp, "</head>\n");
-	fprintf(fp, "</html>\n");
-
+	fprintf(fp, INDEX_HTML);
 	fclose(fp);
 }
 
