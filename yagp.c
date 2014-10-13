@@ -42,12 +42,15 @@
 #define PORTRAIT	0
 #define LANDSCAPE	1
 
-#define IMGS_PER_PAGE	16
-#define IMGS_PER_ROW	 4
+#define IMGS_PER_PAGE	imgs_per_page
+#define IMGS_PER_ROW	imgs_per_row
 
 #define IMGS_ALLOC_SZ	50
 
 #define ALBUM_TITLE	album_title
+
+static int imgs_per_page = 16;
+static int imgs_per_row = 4;
 
 static int nr_images;
 static int nr_pages;
@@ -328,24 +331,36 @@ skip:
 	nr_pages = ceil((double)nr_images / IMGS_PER_PAGE);
 }
 
+static void disp_usage(void)
+{
+	printf("Usage: yagp [-p images per page] [-r images per row] <-t title>\n");
+	printf("\nimages per page should be wholly divisible by images per row\n");
+	exit(EXIT_FAILURE);
+}
+
 int main(int argc, char *argv[])
 {
 	int opt;
 
-	while ((opt = getopt(argc, argv, "t:")) != -1) {
+	while ((opt = getopt(argc, argv, "p:r:t:")) != -1) {
 		switch (opt) {
 		case 't':
 			album_title = optarg;
 			break;
+		case 'p':
+			imgs_per_page = atoi(optarg);
+			break;
+		case 'r':
+			imgs_per_row = atoi(optarg);
+			break;
 		default:
-			printf("Usage: yagp <-t title>\n");
-			exit(EXIT_FAILURE);
+			disp_usage();
 		}
 	}
-	if (!album_title) {
-		printf("Usage: yagp <-t title>\n");
-		exit(EXIT_FAILURE);
-	}
+	if (!album_title)
+		disp_usage();
+	if (imgs_per_page % imgs_per_row)
+		disp_usage();
 
 	InitializeMagick(*argv);
 
