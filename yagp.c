@@ -184,8 +184,8 @@ static void create_html(void)
 			if (image_no == nr_images)
 				break;
 			if (j && j % IMGS_PER_ROW == 0)
-				fprintf(fp, "</tr>\n<tr class=\"tr_index\">\n");
-			fprintf(fp, "<td class=\"td_index\">\n<div class=\"thumbnail-caption-container\">\n");
+				fprintf(fp, THUMB_NEW_ROW);
+			fprintf(fp, THUMB_CELL);
 			img = images[image_no];
 			if (img[0] == 'P')
 				width = THUMB_W_P;

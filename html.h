@@ -157,6 +157,11 @@
         </div> <!-- thumbnail-caption-container -->\n\
      </td>\n"
 
+#define THUMB_NEW_ROW	"</tr>\n\
+	<tr class=\"tr_index\">\n"
+
+#define THUMB_CELL	"<td class=\"td_index\">\n<div class=\"thumbnail-caption-container\">\n"
+
 #define HTML_END	"</tr>\n\
 	</table>\n\
       </div>\n\n\
