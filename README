@@ -12,5 +12,10 @@ It will create three directories; html, thumbnails & previews. Copy the theme
 directory from this repository into the html directory so you end up with
 html/theme
 
+By default yagp will create a 4x4 grid of images per page. You can use the
+-p and -r options to set the number of images per page and number of images
+per row respectively. Note: images per page should be wholly divisible by
+images per row. e.g the defaults is equivalent to specifying -p 16 -r 4
+
 This is licensed under the GNU General Public License V2.
 See COPYING.
