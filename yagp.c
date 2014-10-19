@@ -342,7 +342,7 @@ int main(int argc, char *argv[])
 {
 	int opt;
 
-	while ((opt = getopt(argc, argv, "p:r:t:")) != -1) {
+	while ((opt = getopt(argc, argv, "p:r:t:h")) != -1) {
 		switch (opt) {
 		case 't':
 			album_title = optarg;
