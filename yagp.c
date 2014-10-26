@@ -179,7 +179,7 @@ static void create_html(void)
 		for (j = 0; j < IMGS_PER_PAGE; j++) {
 			int width = THUMB_W;
 			int height = THUMB_H;
-			char date[32];
+			char date[32] = "\0";
 			char desc[512] = "\0";
 			ExifData *ed;
 			ExifEntry *ee;
@@ -195,8 +195,8 @@ static void create_html(void)
 			img++;
 
 			ed = exif_data_new_from_file(img);
-			ee = exif_content_get_entry(ed->ifd[EXIF_IFD_0],
-					EXIF_TAG_DATE_TIME);
+			ee = exif_content_get_entry(ed->ifd[EXIF_IFD_EXIF],
+					EXIF_TAG_DATE_TIME_ORIGINAL);
 			exif_entry_get_value(ee, date, sizeof(date));
 			ee = exif_content_get_entry(ed->ifd[EXIF_IFD_EXIF],
 					EXIF_TAG_USER_COMMENT);
