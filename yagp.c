@@ -1,13 +1,13 @@
 /*
  * yagp - Yet Another Gallery Program
  *
- * Copyright (C) 2014		Andrew Clayton <andrew@digital-domain.net>
+ * Copyright (C) 2014 - 2015	Andrew Clayton <andrew@digital-domain.net>
  *
  * Licensed under the GNU General Public License V2
  * See COPYING
  */
 
-#define _BSD_SOURCE		/* DT_ */
+#define _GNU_SOURCE		/* dirent.d_type / DT_* */
 #define _XOPEN_SOURCE		/* optarg */
 
 #include <stdio.h>
