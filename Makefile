@@ -1,5 +1,5 @@
 C=gcc
-CFLAGS=-Wall -std=c99 -O2 -D_FILE_OFFSET_BITS=64
+CFLAGS=-Wall -g -std=c99 -O2 -D_FILE_OFFSET_BITS=64
 INCS=`GraphicsMagickWand-config --cppflags`
 LIBS=`GraphicsMagickWand-config --libs` -lexif -lm
 
