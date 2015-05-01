@@ -8,11 +8,10 @@
  */
 
 #define _GNU_SOURCE		/* dirent.d_type / DT_* */
-#define _XOPEN_SOURCE		/* optarg */
+#define _XOPEN_SOURCE	700	/* getopt(3), scandir(3) */
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdbool.h>
 #include <string.h>
 #include <strings.h>
 #include <sys/types.h>
@@ -63,20 +62,31 @@ static char *album_title;
  * Quick sanity check if a file is likely to be a JPEG by file
  * extension.
  */
-static bool is_image_file(const char *image)
+static int is_image_file(const struct dirent *d)
 {
 	char *ext;
 
-	ext = rindex(image, '.');
+	if ((d->d_type != DT_REG && d->d_type != DT_UNKNOWN) ||
+	    d->d_name[0] == '.')
+		return 0;
+	if (d->d_type == DT_UNKNOWN) {
+		struct stat sb;
+
+		stat(d->d_name, &sb);
+		if (!S_ISREG(sb.st_mode))
+			return 0;
+	}
+
+	ext = strrchr(d->d_name, '.');
 	if (!ext)
-		return false;
+		return 0;
 	ext++;
 
 	if (strcasecmp(ext, "jpg") == 0 ||
 	    strcasecmp(ext, "jpeg") == 0)
-		return true;
+		return 1;
 	else
-		return false;
+		return 0;
 }
 
 static char *exif_date_to_date(char *date)
@@ -282,32 +292,26 @@ out:
 
 static void process_images(void)
 {
-	DIR *dir;
-	struct dirent *dt;
+	struct dirent **namelist;
+	int i;
+	int entries;
+
+	entries = scandir(".", &namelist, is_image_file, alphasort);
+	if (entries < 0) {
+		perror("scandir");
+		exit(EXIT_FAILURE);
+	}
 
 	images = malloc(IMGS_ALLOC_SZ * sizeof(*images));
 
-	dir = opendir(".");
-	while ((dt = readdir(dir)) != NULL) {
+	for (i = 0; i < entries; i++) {
 		MagickWand *wand;
 		MagickPassFail status;
 		int orient;
-
-		if ((dt->d_type != DT_REG && dt->d_type != DT_UNKNOWN) ||
-		    dt->d_name[0] == '.')
-			continue;
-		if (dt->d_type == DT_UNKNOWN) {
-			struct stat sb;
-
-			stat(dt->d_name, &sb);
-			if (!S_ISREG(sb.st_mode))
-				continue;
-		}
-		if (!is_image_file(dt->d_name))
-			continue;
+		const char *d_name = namelist[i]->d_name;
 
 		wand = NewMagickWand();
-		status = MagickReadImage(wand, dt->d_name);
+		status = MagickReadImage(wand, d_name);
 		if (status != MagickPass)
 			goto skip;
 
@@ -317,16 +321,17 @@ static void process_images(void)
 			imgs_allocd_sz += IMGS_ALLOC_SZ;
 		}
 
-		orient = create_thumbnail(wand, dt->d_name);
-		create_preview(wand, dt->d_name);
+		orient = create_thumbnail(wand, d_name);
+		create_preview(wand, d_name);
 
 		snprintf(images[nr_images], sizeof(images[nr_images]), "%s%s",
-				(orient == PORTRAIT) ? "P" : "L", dt->d_name);
+				(orient == PORTRAIT) ? "P" : "L", d_name);
 		nr_images++;
 skip:
 		DestroyMagickWand(wand);
+		free(namelist[i]);
 	}
-	closedir(dir);
+	free(namelist);
 
 	nr_pages = ceil((double)nr_images / IMGS_PER_PAGE);
 }
