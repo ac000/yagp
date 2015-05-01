@@ -16,6 +16,7 @@
 #include <strings.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/time.h>
 #include <unistd.h>
 #include <dirent.h>
 #include <limits.h>
@@ -224,20 +225,20 @@ static void create_html(void)
 	create_html_index();
 }
 
-static void create_preview(const MagickWand *wand, const char *image)
+static void create_preview(const MagickWand *wand, const char *image,
+			   const struct stat *sb)
 {
 	MagickWand *cwand;
 	char name[PATH_MAX];
 	unsigned long width = PREVIEW_W;
 	unsigned long height = PREVIEW_H;
-	struct stat sb;
-	time_t orig_mtime;
+	int err;
+	struct stat psb;
+	struct timeval times[2];
 
 	snprintf(name, sizeof(name), "previews/%s.medium.jpeg", image);
-	stat(image, &sb);
-	orig_mtime = sb.st_mtime;
-	stat(name, &sb);
-	if (orig_mtime < sb.st_mtime) {
+	err = stat(name, &psb);
+	if (!err && sb->st_mtime <= psb.st_mtime) {
 		printf("%sSkipping preview for %s\n", LIGHT_UP_AND_RIGHT,
 				name);
 		return;
@@ -253,17 +254,25 @@ static void create_preview(const MagickWand *wand, const char *image)
 
 	MagickWriteImage(cwand, name);
 	DestroyMagickWand(cwand);
+
+	times[0].tv_sec = sb->st_atime;
+	times[0].tv_usec = 0;
+	times[1].tv_sec = sb->st_mtime;
+	times[1].tv_usec = 0;
+	utimes(name, times);
 }
 
-static int create_thumbnail(const MagickWand *wand, const char *image)
+static int create_thumbnail(const MagickWand *wand, const char *image,
+			    struct stat *sb)
 {
 	MagickWand *cwand = CloneMagickWand(wand);
 	char name[PATH_MAX];
 	unsigned long width = THUMB_W;
 	unsigned long height = THUMB_H;
-	struct stat sb;
-	time_t orig_mtime;
 	int orient = LANDSCAPE;
+	int err;
+	struct stat tsb;
+	struct timeval times[2];
 
 	if (MagickGetImageHeight(cwand) > MagickGetImageWidth(cwand)) {
 		width = THUMB_W_P;
@@ -271,10 +280,9 @@ static int create_thumbnail(const MagickWand *wand, const char *image)
 	}
 
 	snprintf(name, sizeof(name), "thumbnails/%s.small.jpeg", image);
-	stat(image, &sb);
-	orig_mtime = sb.st_mtime;
-	stat(name, &sb);
-	if (orig_mtime < sb.st_mtime) {
+	stat(image, sb);
+	err = stat(name, &tsb);
+	if (!err && sb->st_mtime <= tsb.st_mtime) {
 		printf("%sSkipping thumbnail for %s\n", LIGHT_DOWN_AND_RIGHT,
 				name);
 		goto out;
@@ -284,6 +292,13 @@ static int create_thumbnail(const MagickWand *wand, const char *image)
 	MagickResizeImage(cwand, width, height, LanczosFilter, 1.0);
 
 	MagickWriteImage(cwand, name);
+
+	times[0].tv_sec = sb->st_atime;
+	times[0].tv_usec = 0;
+	times[1].tv_sec = sb->st_mtime;
+	times[1].tv_usec = 0;
+	utimes(name, times);
+
 out:
 	DestroyMagickWand(cwand);
 
@@ -309,6 +324,7 @@ static void process_images(void)
 		MagickPassFail status;
 		int orient;
 		const char *d_name = namelist[i]->d_name;
+		struct stat sb;
 
 		wand = NewMagickWand();
 		status = MagickReadImage(wand, d_name);
@@ -321,8 +337,8 @@ static void process_images(void)
 			imgs_allocd_sz += IMGS_ALLOC_SZ;
 		}
 
-		orient = create_thumbnail(wand, d_name);
-		create_preview(wand, d_name);
+		orient = create_thumbnail(wand, d_name, &sb);
+		create_preview(wand, d_name, &sb);
 
 		snprintf(images[nr_images], sizeof(images[nr_images]), "%s%s",
 				(orient == PORTRAIT) ? "P" : "L", d_name);
