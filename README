@@ -17,5 +17,8 @@ By default yagp will create a 4x4 grid of images per page. You can use the
 per row respectively. Note: images per page should be wholly divisible by
 images per row. e.g the defaults is equivalent to specifying -p 16 -r 4
 
+By default images will be processed in name order, you can use the -s switch
+to sort by mtime with -s mtime.
+
 This is licensed under the GNU General Public License V2.
 See COPYING.

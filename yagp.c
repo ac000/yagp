@@ -60,6 +60,27 @@ static char (*images)[NAME_MAX + 2];	/* +2 for P or L and \0 */
 static char *album_title;
 
 /*
+ * Used in scandir(3) to sort the images by mtime, where two images have
+ * the same mtime it will use strcoll(3) to compare the image names and
+ * sort on that.
+ */
+static int mtimesort(const struct dirent **a, const struct dirent **b)
+{
+	struct stat asb;
+	struct stat bsb;
+
+	stat((*a)->d_name, &asb);
+	stat((*b)->d_name, &bsb);
+
+	if (asb.st_mtime < bsb.st_mtime)
+		return -1;
+	else if (asb.st_mtime > bsb.st_mtime)
+		return 1;
+	else
+		return strcoll((*a)->d_name, (*b)->d_name);
+}
+
+/*
  * Quick sanity check if a file is likely to be a JPEG by file
  * extension.
  */
@@ -305,13 +326,14 @@ out:
 	return orient;
 }
 
-static void process_images(void)
+static void process_images(int (*sortfunc)
+			   (const struct dirent **a, const struct dirent **b))
 {
 	struct dirent **namelist;
 	int i;
 	int entries;
 
-	entries = scandir(".", &namelist, is_image_file, alphasort);
+	entries = scandir(".", &namelist, is_image_file, sortfunc);
 	if (entries < 0) {
 		perror("scandir");
 		exit(EXIT_FAILURE);
@@ -354,17 +376,32 @@ skip:
 
 static void disp_usage(void)
 {
-	printf("Usage: yagp [-p images per page] [-r images per row] <-t title>\n");
-	printf("\nimages per page should be wholly divisible by images per row\n");
+	printf("Usage: yagp [-s <name|mtime>] [-p images per page] "
+			"[-r images per row]\n"
+			"\t    <-t title>\n");
+	printf("\n-s is what order to process the images in, either by name "
+			"(default) or by mtime\n"
+			"images per page should be wholly divisible by images "
+			"per row\n");
 	exit(EXIT_FAILURE);
 }
 
 int main(int argc, char *argv[])
 {
 	int opt;
+	int (*sortfunc)(const struct dirent **a, const struct dirent **b) =
+		alphasort;
 
-	while ((opt = getopt(argc, argv, "p:r:t:h")) != -1) {
+	while ((opt = getopt(argc, argv, "p:r:t:s:h")) != -1) {
 		switch (opt) {
+		case 's':
+			if (strcmp(optarg, "mtime") == 0)
+				sortfunc = mtimesort;
+			else if (strcmp(optarg, "name") == 0)
+				sortfunc = alphasort;
+			else
+				disp_usage();
+			break;
 		case 't':
 			album_title = optarg;
 			break;
@@ -389,7 +426,7 @@ int main(int argc, char *argv[])
 	mkdir("previews", 0777);
 	mkdir("html", 0777);
 
-	process_images();
+	process_images(sortfunc);
 	create_html();
 
 	DestroyMagick();
