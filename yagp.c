@@ -54,7 +54,6 @@ static int imgs_per_row = 4;
 
 static int nr_images;
 static int nr_pages;
-static int imgs_allocd_sz = IMGS_ALLOC_SZ;
 
 static char (*images)[NAME_MAX + 2];	/* +2 for P or L and \0 */
 static char *album_title;
@@ -339,8 +338,6 @@ static void process_images(int (*sortfunc)
 		exit(EXIT_FAILURE);
 	}
 
-	images = malloc(IMGS_ALLOC_SZ * sizeof(*images));
-
 	for (i = 0; i < entries; i++) {
 		MagickWand *wand;
 		MagickPassFail status;
@@ -353,11 +350,9 @@ static void process_images(int (*sortfunc)
 		if (status != MagickPass)
 			goto skip;
 
-		if (nr_images == imgs_allocd_sz) {
+		if (nr_images % IMGS_ALLOC_SZ == 0)
 			images = realloc(images, nr_images * sizeof(*images) +
 					IMGS_ALLOC_SZ * sizeof(*images));
-			imgs_allocd_sz += IMGS_ALLOC_SZ;
-		}
 
 		orient = create_thumbnail(wand, d_name, &sb);
 		create_preview(wand, d_name, &sb);
