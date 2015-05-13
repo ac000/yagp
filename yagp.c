@@ -45,7 +45,8 @@
 #define IMGS_PER_PAGE	imgs_per_page
 #define IMGS_PER_ROW	imgs_per_row
 
-#define IMGS_ALLOC_SZ	50
+#define IMGS_ALLOC_SZ		  50
+#define ENC_HTML_ALLOC_SZ	4096
 
 #define ALBUM_TITLE	album_title
 
@@ -57,6 +58,49 @@ static int nr_pages;
 
 static char (*images)[NAME_MAX + 2];	/* +2 for P or L and \0 */
 static char *album_title;
+
+/*
+ * Encode certain characters of the image description to avoid
+ * generating duff html.
+ */
+static char *encode_chars(const char *src)
+{
+	char *encoded_html = malloc(ENC_HTML_ALLOC_SZ);
+	size_t alloc = ENC_HTML_ALLOC_SZ;
+
+	encoded_html[0] = '\0';
+	for ( ; *src != '\0'; src++) {
+		if (strlen(encoded_html) + 7 > alloc) {
+			encoded_html = realloc(encoded_html,
+					alloc + ENC_HTML_ALLOC_SZ);
+			alloc += ENC_HTML_ALLOC_SZ;
+		}
+		switch (*src) {
+		case '&':
+			strcat(encoded_html, "&amp;");
+			break;
+		case '<':
+			strcat(encoded_html, "&lt;");
+			break;
+		case '>':
+			strcat(encoded_html, "&gt;");
+			break;
+		case '"':
+			strcat(encoded_html, "&quot;");
+			break;
+		case '\'':
+			strcat(encoded_html, "&#x27;");
+			break;
+		case '/':
+			strcat(encoded_html, "&#x2F;");
+			break;
+		default:
+			strncat(encoded_html, src, 1);
+		}
+	}
+
+	return encoded_html;
+}
 
 /*
  * Used in scandir(3) to sort the images by mtime, where two images have
@@ -212,6 +256,7 @@ static void create_html(void)
 			int height = THUMB_H;
 			char date[32] = "\0";
 			char desc[512] = "\0";
+			char *enc_desc;
 			ExifData *ed;
 			ExifEntry *ee;
 
@@ -233,11 +278,13 @@ static void create_html(void)
 					EXIF_TAG_USER_COMMENT);
 			exif_entry_get_value(ee, desc, sizeof(desc));
 
+			enc_desc = encode_chars(desc);
 			fprintf(fp, THUMB_CT, img, img, img, width, height,
-					desc, exif_date_to_date(date));
-			create_preview_html(name + 5, image_no, desc);
+					enc_desc, exif_date_to_date(date));
+			create_preview_html(name + 5, image_no, enc_desc);
 			image_no++;
 			exif_data_unref(ed);
+			free(enc_desc);
 		}
 		fprintf(fp, HTML_END);
 		fclose(fp);
