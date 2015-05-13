@@ -472,6 +472,7 @@ int main(int argc, char *argv[])
 	create_html();
 
 	DestroyMagick();
+	free(images);
 
 	exit(EXIT_SUCCESS);
 }
