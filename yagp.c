@@ -439,9 +439,7 @@ int main(int argc, char *argv[])
 		case 's':
 			if (strcmp(optarg, "mtime") == 0)
 				sortfunc = mtimesort;
-			else if (strcmp(optarg, "name") == 0)
-				sortfunc = alphasort;
-			else
+			else if (strcmp(optarg, "name") != 0)
 				disp_usage();
 			break;
 		case 't':
