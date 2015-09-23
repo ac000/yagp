@@ -26,6 +26,8 @@
 
 #include <wand/magick_wand.h>
 
+#include <vips/vips.h>
+
 #include "html.h"
 
 #define LIGHT_UP_AND_RIGHT	"\342\224\224"	/* └ */
@@ -292,10 +294,12 @@ static void create_html(void)
 	create_html_index();
 }
 
-static void create_preview(const MagickWand *wand, const char *image,
+static void create_preview(VipsImage *vi, const char *image,
 			   const struct stat *sb)
 {
-	MagickWand *cwand;
+	MagickWand *wand;
+	unsigned char *image_buf;
+	size_t buf_len;
 	char name[PATH_MAX];
 	unsigned long width = PREVIEW_W;
 	unsigned long height = PREVIEW_H;
@@ -312,15 +316,19 @@ static void create_preview(const MagickWand *wand, const char *image,
 	}
 
 	printf("%sCreating preview for %s\n", LIGHT_UP_AND_RIGHT, image);
-	cwand = CloneMagickWand(wand);
-	if (MagickGetImageHeight(cwand) > MagickGetImageWidth(cwand)) {
+	if (vips_image_get_height(vi) > vips_image_get_width(vi)) {
 		width = PREVIEW_W_P;
 		height = PREVIEW_H_P;
 	}
-	MagickResizeImage(cwand, width, height, LanczosFilter, 1.0);
 
-	MagickWriteImage(cwand, name);
-	DestroyMagickWand(cwand);
+	vips_image_write_to_buffer(vi, ".jpeg", (void *)&image_buf, &buf_len,
+			NULL);
+	wand = NewMagickWand();
+	MagickReadImageBlob(wand, image_buf, buf_len);
+	free(image_buf);
+	MagickResizeImage(wand, width, height, LanczosFilter, 1.0);
+	MagickWriteImage(wand, name);
+	DestroyMagickWand(wand);
 
 	times[0].tv_sec = sb->st_atime;
 	times[0].tv_usec = 0;
@@ -329,10 +337,11 @@ static void create_preview(const MagickWand *wand, const char *image,
 	utimes(name, times);
 }
 
-static int create_thumbnail(const MagickWand *wand, const char *image,
-			    struct stat *sb)
+static int create_thumbnail(VipsImage *vi, const char *image, struct stat *sb)
 {
-	MagickWand *cwand = CloneMagickWand(wand);
+	MagickWand *wand;
+	unsigned char *image_buf;
+	size_t buf_len;
 	char name[PATH_MAX];
 	unsigned long width = THUMB_W;
 	unsigned long height = THUMB_H;
@@ -341,7 +350,7 @@ static int create_thumbnail(const MagickWand *wand, const char *image,
 	struct stat tsb;
 	struct timeval times[2];
 
-	if (MagickGetImageHeight(cwand) > MagickGetImageWidth(cwand)) {
+	if (vips_image_get_height(vi) > vips_image_get_width(vi)) {
 		width = THUMB_W_P;
 		orient = PORTRAIT;
 	}
@@ -354,11 +363,16 @@ static int create_thumbnail(const MagickWand *wand, const char *image,
 				name);
 		goto out;
 	}
-
 	printf("%sCreating thumbnail for %s\n", LIGHT_DOWN_AND_RIGHT, image);
-	MagickResizeImage(cwand, width, height, LanczosFilter, 1.0);
 
-	MagickWriteImage(cwand, name);
+	vips_image_write_to_buffer(vi, ".jpeg", (void *)&image_buf, &buf_len,
+			NULL);
+	wand = NewMagickWand();
+	MagickReadImageBlob(wand, image_buf, buf_len);
+	free(image_buf);
+	MagickResizeImage(wand, width, height, LanczosFilter, 1.0);
+	MagickWriteImage(wand, name);
+	DestroyMagickWand(wand);
 
 	times[0].tv_sec = sb->st_atime;
 	times[0].tv_usec = 0;
@@ -367,8 +381,6 @@ static int create_thumbnail(const MagickWand *wand, const char *image,
 	utimes(name, times);
 
 out:
-	DestroyMagickWand(cwand);
-
 	return orient;
 }
 
@@ -386,29 +398,27 @@ static void process_images(int (*sortfunc)
 	}
 
 	for (i = 0; i < entries; i++) {
-		MagickWand *wand;
-		MagickPassFail status;
+		VipsImage *vi;
 		int orient;
 		const char *d_name = namelist[i]->d_name;
 		struct stat sb;
 
-		wand = NewMagickWand();
-		status = MagickReadImage(wand, d_name);
-		if (status != MagickPass)
+		vi = vips_image_new_from_file(d_name, NULL);
+		if (!vi)
 			goto skip;
 
 		if (nr_images % IMGS_ALLOC_SZ == 0)
 			images = realloc(images, nr_images * sizeof(*images) +
 					IMGS_ALLOC_SZ * sizeof(*images));
 
-		orient = create_thumbnail(wand, d_name, &sb);
-		create_preview(wand, d_name, &sb);
+		orient = create_thumbnail(vi, d_name, &sb);
+		create_preview(vi, d_name, &sb);
 
 		snprintf(images[nr_images], sizeof(images[nr_images]), "%s%s",
 				(orient == PORTRAIT) ? "P" : "L", d_name);
 		nr_images++;
+		g_object_unref(vi);
 skip:
-		DestroyMagickWand(wand);
 		free(namelist[i]);
 	}
 	free(namelist);
@@ -461,6 +471,7 @@ int main(int argc, char *argv[])
 		disp_usage();
 
 	InitializeMagick(*argv);
+	VIPS_INIT(argv[0]);
 
 	mkdir("thumbnails", 0777);
 	mkdir("previews", 0777);
@@ -469,8 +480,9 @@ int main(int argc, char *argv[])
 	process_images(sortfunc);
 	create_html();
 
-	DestroyMagick();
 	free(images);
+	vips_shutdown();
+	DestroyMagick();
 
 	exit(EXIT_SUCCESS);
 }
