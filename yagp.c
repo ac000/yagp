@@ -24,8 +24,6 @@
 
 #include <libexif/exif-data.h>
 
-#include <wand/magick_wand.h>
-
 #include <vips/vips.h>
 
 #include "html.h"
@@ -297,12 +295,11 @@ static void create_html(void)
 static void create_preview(VipsImage *vi, const char *image,
 			   const struct stat *sb)
 {
-	MagickWand *wand;
-	unsigned char *image_buf;
-	size_t buf_len;
+	VipsImage *out;
+	VipsInterpolate *vip = vips_interpolate_new("lanczos");
 	char name[PATH_MAX];
 	unsigned long width = PREVIEW_W;
-	unsigned long height = PREVIEW_H;
+	double scale;
 	int err;
 	struct stat psb;
 	struct timeval times[2];
@@ -316,19 +313,13 @@ static void create_preview(VipsImage *vi, const char *image,
 	}
 
 	printf("%sCreating preview for %s\n", LIGHT_UP_AND_RIGHT, image);
-	if (vips_image_get_height(vi) > vips_image_get_width(vi)) {
+	if (vips_image_get_height(vi) > vips_image_get_width(vi))
 		width = PREVIEW_W_P;
-		height = PREVIEW_H_P;
-	}
 
-	vips_image_write_to_buffer(vi, ".jpeg", (void *)&image_buf, &buf_len,
-			NULL);
-	wand = NewMagickWand();
-	MagickReadImageBlob(wand, image_buf, buf_len);
-	free(image_buf);
-	MagickResizeImage(wand, width, height, LanczosFilter, 1.0);
-	MagickWriteImage(wand, name);
-	DestroyMagickWand(wand);
+	scale = (double)width / vips_image_get_width(vi);
+	vips_resize(vi, &out, scale, "interpolate", vip, NULL);
+	vips_image_write_to_file(out, name, NULL);
+	g_object_unref(out);
 
 	times[0].tv_sec = sb->st_atime;
 	times[0].tv_usec = 0;
@@ -339,12 +330,11 @@ static void create_preview(VipsImage *vi, const char *image,
 
 static int create_thumbnail(VipsImage *vi, const char *image, struct stat *sb)
 {
-	MagickWand *wand;
-	unsigned char *image_buf;
-	size_t buf_len;
+	VipsImage *out;
+	VipsInterpolate *vip = vips_interpolate_new("lanczos");
 	char name[PATH_MAX];
 	unsigned long width = THUMB_W;
-	unsigned long height = THUMB_H;
+	double scale;
 	int orient = LANDSCAPE;
 	int err;
 	struct stat tsb;
@@ -365,14 +355,10 @@ static int create_thumbnail(VipsImage *vi, const char *image, struct stat *sb)
 	}
 	printf("%sCreating thumbnail for %s\n", LIGHT_DOWN_AND_RIGHT, image);
 
-	vips_image_write_to_buffer(vi, ".jpeg", (void *)&image_buf, &buf_len,
-			NULL);
-	wand = NewMagickWand();
-	MagickReadImageBlob(wand, image_buf, buf_len);
-	free(image_buf);
-	MagickResizeImage(wand, width, height, LanczosFilter, 1.0);
-	MagickWriteImage(wand, name);
-	DestroyMagickWand(wand);
+	scale = (double)width / vips_image_get_width(vi);
+	vips_resize(vi, &out, scale, "interpolate", vip, NULL);
+	vips_image_write_to_file(out, name, NULL);
+	g_object_unref(out);
 
 	times[0].tv_sec = sb->st_atime;
 	times[0].tv_usec = 0;
@@ -470,7 +456,6 @@ int main(int argc, char *argv[])
 	if (imgs_per_page % imgs_per_row)
 		disp_usage();
 
-	InitializeMagick(*argv);
 	VIPS_INIT(argv[0]);
 
 	mkdir("thumbnails", 0777);
@@ -482,7 +467,6 @@ int main(int argc, char *argv[])
 
 	free(images);
 	vips_shutdown();
-	DestroyMagick();
 
 	exit(EXIT_SUCCESS);
 }
