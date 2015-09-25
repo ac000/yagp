@@ -1,7 +1,7 @@
 		yagp - Yet Another Gallery Program
 
 This is inspired by the gThumb web gallery creator. It has very simple
-requirements, VIPS & libexif.
+requirements, VIPS (7.41+) & libexif.
 
 Building it is as simple as typing make.
 
