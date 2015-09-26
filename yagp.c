@@ -224,7 +224,6 @@ static void create_html(void)
 		char name[PATH_MAX];
 		char ppage[NAME_MAX + 1];
 		char npage[NAME_MAX + 1];
-		char *img;
 		int page_no = i + 1;
 		int j;
 
@@ -257,6 +256,7 @@ static void create_html(void)
 			char date[32] = "\0";
 			char desc[512] = "\0";
 			char *enc_desc;
+			const char *img;
 			ExifData *ed;
 			ExifEntry *ee;
 
