@@ -175,7 +175,7 @@ static void create_preview_html(const char *page, int image_no,
 {
 	FILE *fp;
 	char name[PATH_MAX];
-	char *img;
+	const char *img;
 	int width = PREVIEW_W;
 	int height = PREVIEW_H;
 
