@@ -1,5 +1,8 @@
 		yagp - Yet Another Gallery Program
 
+Overview
+========
+
 This is inspired by the gThumb web gallery creator. It has very simple
 requirements, VIPS (7.41+) & libexif.
 
@@ -20,5 +23,20 @@ images per row. e.g the defaults is equivalent to specifying -p 16 -r 4
 By default images will be processed in name order, you can use the -s switch
 to sort by mtime with -s mtime.
 
+
+License
+=======
+
 This is licensed under the GNU General Public License V2.
 See COPYING.
+
+
+Contributing
+============
+
+See CodingStyle. Also, code should be signed-off. This means adding a line
+that says "Signed-off-by: Name <email>" at the end of each commit, indicating
+that you wrote the code and have the right to pass it on as an open source
+patch.
+
+See: http://developercertificate.org/
