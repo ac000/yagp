@@ -1,7 +1,7 @@
 /*
  * yagp - Yet Another Gallery Program
  *
- * Copyright (C) 2014 - 2015	Andrew Clayton <andrew@digital-domain.net>
+ * Copyright (C) 2014 - 2016	Andrew Clayton <andrew@digital-domain.net>
  *
  * Licensed under the GNU General Public License V2
  * See COPYING
@@ -27,6 +27,8 @@
 #include <vips/vips.h>
 
 #include "html.h"
+
+#define INTERPOLATION		"bilinear"
 
 #define LIGHT_UP_AND_RIGHT	"\342\224\224"	/* └ */
 #define LIGHT_DOWN_AND_RIGHT	"\342\224\214"	/* ┌ */
@@ -296,7 +298,7 @@ static void create_preview(VipsImage *vi, const char *image,
 			   const struct stat *sb)
 {
 	VipsImage *out;
-	VipsInterpolate *vip = vips_interpolate_new("lanczos");
+	VipsInterpolate *vip = vips_interpolate_new(INTERPOLATION);
 	char name[PATH_MAX];
 	unsigned long width = PREVIEW_W;
 	double scale;
@@ -331,7 +333,7 @@ static void create_preview(VipsImage *vi, const char *image,
 static int create_thumbnail(VipsImage *vi, const char *image, struct stat *sb)
 {
 	VipsImage *out;
-	VipsInterpolate *vip = vips_interpolate_new("lanczos");
+	VipsInterpolate *vip = vips_interpolate_new(INTERPOLATION);
 	char name[PATH_MAX];
 	unsigned long width = THUMB_W;
 	double scale;
