@@ -311,7 +311,7 @@ static void create_preview(VipsImage *vi, const char *image,
 	if (!err && sb->st_mtime <= psb.st_mtime) {
 		printf("%sSkipping preview for %s\n", LIGHT_UP_AND_RIGHT,
 				name);
-		return;
+		goto out;
 	}
 
 	printf("%sCreating preview for %s\n", LIGHT_UP_AND_RIGHT, image);
@@ -328,6 +328,9 @@ static void create_preview(VipsImage *vi, const char *image,
 	times[1].tv_sec = sb->st_mtime;
 	times[1].tv_usec = 0;
 	utimes(name, times);
+
+out:
+	g_object_unref(vip);
 }
 
 static int create_thumbnail(VipsImage *vi, const char *image, struct stat *sb)
@@ -369,6 +372,8 @@ static int create_thumbnail(VipsImage *vi, const char *image, struct stat *sb)
 	utimes(name, times);
 
 out:
+	g_object_unref(vip);
+
 	return orient;
 }
 
